@@ -1,5 +1,7 @@
 # Terminal Screenshot Generator
 
+> **Note:** This project is currently in active development and is considered a work in progress. Features may change, and you might encounter some bugs. Feedback is highly appreciated!
+
 A professional web-based tool for creating beautiful, high-quality terminal code screenshots. Designed for developers, documentation writers, and content creators who need clean and customizable code snippets for presentations, blogs, or social media.
 
 ## Features
