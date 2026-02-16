@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Terminal Screenshot Generator - Professional Code Screenshots</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Primary Colors */
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --primary-light: #66BB6A;
+
+            /* Background */
+            --bg-main: #0f172a;
+            --bg-elevated: #1e293b;
+            --bg-panel: rgba(30, 41, 59, 0.8);
+
+            /* Text */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            /* Glass */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-main) 0%, #1a202c 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 30% 50%, rgba(76, 175, 80, 0.08), transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(59, 130, 246, 0.08), transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(168, 85, 247, 0.06), transparent 50%);
+            animation: moveGradient 20s ease-in-out infinite;
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        @keyframes moveGradient {
+
+            0%,
+            100% {
+                transform: translate(0%, 0%) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30%, 20%) rotate(120deg);
+            }
+
+            66% {
+                transform: translate(-20%, 30%) rotate(240deg);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::before {
+                animation: none;
+            }
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-content h1 i {
+            color: var(--primary);
+        }
+
+        .header-content p {
+            color: var(--text-muted);
+            font-size: clamp(0.85rem, 1.5vw, 1rem);
+        }
+
+        .github-link {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .github-link:hover {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        /* Main Split Container */
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            height: calc(100vh - 220px);
+        }
+
+        /* Panel Styles */
+        .panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Editor Panel */
+        .editor-wrapper {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            padding: 1rem 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: right;
+            user-select: none;
+            min-width: 50px;
+            overflow-y: hidden;
+            white-space: pre;
+        }
+
+        .code-editor {
+            flex: 1;
+            padding: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .code-editor::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Language Badge */
+        .language-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .code-stats {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Terminal Preview */
+        .terminal-window {
+            margin: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .terminal-buttons .btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-buttons .red {
+            background: #ff5f56;
+        }
+
+        .terminal-buttons .yellow {
+            background: #ffbd2e;
+        }
+
+        .terminal-buttons .green {
+            background: #27c93f;
+        }
+
+        .terminal-title {
+            color: #ccc;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .terminal-body {
+            background: #1e1e1e;
+            padding: 1.5rem;
+            min-height: 300px;
+            max-height: calc(100vh - 450px);
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        /* Terminal Footer */
+        .terminal-footer {
+            background: linear-gradient(to bottom, #2a2a2a, #1e1e1e);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            border-top: 1px solid #333;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .footer-item i {
+            color: var(--primary);
+        }
+
+        .footer-credit {
+            margin-left: auto;
+            font-size: 0.7rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .footer-credit i {
+            color: var(--primary);
+        }
+
+        /* Control Bar */
+        .controls-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 1rem 1.5rem;
+            z-index: 100;
+        }
+
+        .controls-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        /* Tabs */
+        .control-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.6rem 1.2rem;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab:hover {
+            background: var(--glass-bg);
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Quick Controls */
+        .quick-controls {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .theme-card {
+            width: 60px;
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .theme-card.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.15);
+        }
+
+        .color-option.active {
+            border-color: white;
+            box-shadow: 0 0 8px white;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .setting-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .setting-input {
+            padding: 0.6rem 0.9rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .preset-section {
+            grid-column: 1 / -1;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .preset-btn {
+            padding: 0.8rem;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .preset-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .preset-btn i {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .preset-dim {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .split-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 1rem;
+            }
+
+            .controls-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .control-tabs {
+                overflow-x: auto;
+                width: 100%;
+            }
+
+            .quick-controls {
+                overflow-x: auto;
+            }
+
+            .theme-selector,
+            .color-picker {
+                justify-content: flex-start;
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .action-buttons button {
+                flex: 1;
+            }
+
+            .terminal-window {
+                margin: 1rem;
+            }
+
+            .terminal-footer {
+                font-size: 0.7rem;
+            }
+
+            .footer-item {
+                font-size: 0.65rem;
+            }
+
+            .settings-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 0;
+            }
+
+            .app-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .header-content h1 {
+                font-size: 1.25rem;
+            }
+
+            .header-content p {
+                font-size: 0.8rem;
+            }
+
+            .split-container {
+                padding: 0.75rem;
+                gap: 0.75rem;
+                height: auto;
+            }
+
+            /* Editor panel visible on all screens */
+            .editor-panel {
+                display: flex;
+            }
+
+            .preview-panel {
+                min-height: 60vh;
+            }
+
+            .terminal-window {
+                margin: 0.5rem;
+            }
+
+            .terminal-body {
+                padding: 1rem;
+                font-size: 12px;
+                min-height: 200px;
+                max-height: 50vh;
+            }
+
+            .terminal-footer {
+                padding: 0.5rem 0.75rem;
+                gap: 0.5rem;
+            }
+
+            .footer-item {
+                font-size: 0.6rem;
+                gap: 0.3rem;
+            }
+
+            .footer-credit {
+                font-size: 0.6rem;
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            .controls-bar {
+                padding: 0.75rem;
+            }
+
+            .control-tabs {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
+            .quick-controls {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
+
+            .theme-selector {
+                gap: 0.4rem;
+            }
+
+            .theme-card {
+                width: 50px;
+                height: 35px;
+                flex-shrink: 0;
+            }
+
+            .color-picker {
+                gap: 0.4rem;
+            }
+
+            .color-option {
+                width: 28px;
+                height: 28px;
+                flex-shrink: 0;
+            }
+
+            .setting-input {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .mode-btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .preset-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .preset-btn {
+                padding: 0.6rem;
+                font-size: 0.7rem;
+            }
+
+            .preset-btn i {
+                font-size: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                padding: 0.65rem 1.25rem;
+                font-size: 0.9rem;
+                width: 100%;
+            }
+
+            .panel-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .panel-title {
+                font-size: 0.85rem;
+            }
+
+            .language-badge {
+                padding: 0.25rem 0.6rem;
+                font-size: 0.65rem;
+            }
+
+            .code-stats {
+                font-size: 0.7rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .notification {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+                font-size: 0.85rem;
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .header-content h1 {
+                font-size: 1.1rem;
+            }
+
+            .github-link {
+                font-size: 1.25rem;
+            }
+
+            .terminal-body {
+                font-size: 11px;
+                padding: 0.75rem;
+            }
+
+            .footer-item,
+            .footer-credit {
+                font-size: 0.55rem;
+            }
+
+            .tab {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.75rem;
+            }
+
+            .theme-card {
+                width: 45px;
+                height: 30px;
+            }
+
+            .color-option {
+                width: 26px;
+                height: 26px;
+            }
+
+            .preset-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-controls {
+                flex-wrap: wrap;
+                /* Allow wrapping on very small screens */
+                justify-content: center;
+            }
+
+            .theme-selector,
+            .color-picker {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                padding: 0.8rem;
+                /* Larger touch targets */
+            }
+
+            .setting-input {
+                padding: 0.8rem;
+                /* Larger inputs */
+            }
+        }
+
+        /* Additional Mobile Improvements */
+        @media (max-width: 480px) {
+
+            /* Minimal height to avoid collapsing */
+            .editor-panel,
+            .preview-panel {
+                min-height: 300px;
+            }
+
+            /* Ensure tabs are scrollable and reachable */
+            .control-tabs {
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 5px;
+                /* Space for scrollbar */
+            }
+
+            /* Hide some icon text if needed or adjust size */
+            .btn-primary i,
+            .btn-secondary i {
+                font-size: 1.1rem;
+            }
+
+            .quick-controls::-webkit-scrollbar {
+                height: 4px;
+                /* Slim scrollbar */
+            }
+
+            .quick-controls::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .quick-controls::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1><i class="fas fa-terminal"></i> Terminal Screenshot Generator</h1>
+            <p>Create beautiful, professional terminal code screenshots</p>
+        </div>
+        <a href="https://github.com/dexccv" target="_blank" rel="noopener noreferrer" class="github-link"
+            title="View on GitHub">
+            <i class="fab fa-github"></i>
+        </a>
+    </header>
+
+    <!-- Main Split View -->
+    <main class="split-container">
+        <!-- Left: Editor Panel -->
+        <section class="panel editor-panel">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <i class="fas fa-code"></i> Code Editor
+                </span>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span class="language-badge" id="langBadge">
+                        <i class="fas fa-magic"></i> Auto
+                    </span>
+                    <span class="code-stats" id="codeStats">0 lines • 0 chars</span>
+                </div>
+            </div>
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="lineNumbers">1</div>
+                <textarea class="code-editor" id="codeEditor" placeholder="Paste your code here...
+Example:
+PS C:\> Get-Process | Where-Object {$_.CPU -gt 100}
+console.log('Hello World');" spellcheck="false"></textarea>
+            </div>
+        </section>
+
+        <!-- Right: Preview Panel -->
+        <section class="panel preview-panel">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <i class="fas fa-desktop"></i> Live Preview
+                </span>
+            </div>
+            <div id="previewContainer">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="btn red"></span>
+                            <span class="btn yellow"></span>
+                            <span class="btn green"></span>
+                        </div>
+                        <span class="terminal-title" id="terminalTitle">Windows PowerShell</span>
+                    </div>
+                    <div class="terminal-body" id="terminalPreview">
+                        <span style="color: #4CAF50;">PS C:\Users\YourName></span> <span style="color: #888;">// Paste
+                            your code in the editor</span>
+                    </div>
+                    <div class="terminal-footer" id="terminalFooter">
+                        <div class="footer-item">
+                            <i class="fas fa-code"></i>
+                            <span id="footerLang">Auto</span>
+                        </div>
+                        <div class="footer-item">
+                            <i class="fas fa-file-code"></i>
+                            <span id="footerLines">0 lines</span>
+                        </div>
+                        <div class="footer-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="footerTime">--:--</span>
+                        </div>
+                        <div class="footer-item">
+                            <i class="fas fa-palette"></i>
+                            <span id="footerTheme">Default Dark</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Controls Bar -->
+    <div class="controls-bar">
+        <div class="controls-content">
+            <!-- Tab Navigation -->
+            <div class="control-tabs">
+                <button class="tab active" data-tab="themes">
+                    <i class="fas fa-palette"></i> Themes
+                </button>
+                <button class="tab" data-tab="colors">
+                    <i class="fas fa-fill-drip"></i> Colors
+                </button>
+                <button class="tab" data-tab="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </div>
+
+            <!-- Quick Controls (Changes based on active tab) -->
+            <div class="quick-controls" id="quickControls">
+                <!-- Themes by default -->
+                <div class="theme-selector" id="themeSelector">
+                    <div class="theme-card active" data-theme="default"
+                        style="background: linear-gradient(135deg, #1e1e1e, #2a2a2a);" title="Default Dark"></div>
+                    <div class="theme-card" data-theme="monokai"
+                        style="background: linear-gradient(135deg, #272822, #3e3d32);" title="Monokai"></div>
+                    <div class="theme-card" data-theme="dracula"
+                        style="background: linear-gradient(135deg, #282a36, #44475a);" title="Dracula"></div>
+                    <div class="theme-card" data-theme="nord"
+                        style="background: linear-gradient(135deg, #2e3440, #3b4252);" title="Nord"></div>
+                    <div class="theme-card" data-theme="solarized"
+                        style="background: linear-gradient(135deg, #002b36, #073642);" title="Solarized Dark"></div>
+                    <div class="theme-card" data-theme="github"
+                        style="background: linear-gradient(135deg, #0d1117, #161b22);" title="GitHub Dark"></div>
+                </div>
+
+                <!-- Colors (hidden by default) -->
+                <div class="color-picker" id="colorPicker" style="display: none;">
+                    <div class="color-option active" data-color="#4CAF50" style="background: #4CAF50;" title="Green">
+                    </div>
+                    <div class="color-option" data-color="#2196F3" style="background: #2196F3;" title="Blue"></div>
+                    <div class="color-option" data-color="#9C27B0" style="background: #9C27B0;" title="Purple"></div>
+                    <div class="color-option" data-color="#FF9800" style="background: #FF9800;" title="Orange"></div>
+                    <div class="color-option" data-color="#F44336" style="background: #F44336;" title="Red"></div>
+                    <div class="color-option" data-color="#00BCD4" style="background: #00BCD4;" title="Cyan"></div>
+                    <div class="color-option" data-color="#FFEB3B" style="background: #FFEB3B;" title="Yellow"></div>
+                    <div class="color-option" data-color="#E91E63" style="background: #E91E63;" title="Pink"></div>
+                </div>
+
+                <!-- Settings (hidden by default) -->
+                <div class="settings-panel" id="settingsPanel" style="display: none;">
+                    <div class="setting-group">
+                        <label>Terminal Title:</label>
+                        <input type="text" id="terminalTitleInput" class="setting-input" value="Windows PowerShell"
+                            placeholder="Enter terminal title...">
+                    </div>
+                    <div class="setting-group">
+                        <label>Filename:</label>
+                        <input type="text" id="filenameInput" class="setting-input" value="terminal-screenshot.png"
+                            placeholder="screenshot.png">
+                    </div>
+                    <div class="setting-group">
+                        <label>Download Mode:</label>
+                        <div class="mode-buttons">
+                            <button class="mode-btn active" data-mode="full">
+                                <i class="fas fa-image"></i> Full Image
+                            </button>
+                            <button class="mode-btn" data-mode="sections">
+                                <i class="fas fa-th"></i> Multiple Sections
+                            </button>
+                        </div>
+                    </div>
+                    <div class="preset-section" id="presetSection" style="display: none;">
+                        <label>Social Media Presets:</label>
+                        <div class="preset-grid">
+                            <button class="preset-btn" data-preset="instagram-square" data-width="1080"
+                                data-height="1080">
+                                <i class="fab fa-instagram"></i> IG Square<br><span class="preset-dim">1080×1080</span>
+                            </button>
+                            <button class="preset-btn" data-preset="instagram-story" data-width="1080"
+                                data-height="1920">
+                                <i class="fab fa-instagram"></i> IG Story<br><span class="preset-dim">1080×1920</span>
+                            </button>
+                            <button class="preset-btn" data-preset="twitter" data-width="1200" data-height="675">
+                                <i class="fab fa-twitter"></i> Twitter<br><span class="preset-dim">1200×675</span>
+                            </button>
+                            <button class="preset-btn" data-preset="linkedin" data-width="1200" data-height="627">
+                                <i class="fab fa-linkedin"></i> LinkedIn<br><span class="preset-dim">1200×627</span>
+                            </button>
+                            <button class="preset-btn" data-preset="facebook" data-width="1200" data-height="630">
+                                <i class="fab fa-facebook"></i> Facebook<br><span class="preset-dim">1200×630</span>
+                            </button>
+                            <button class="preset-btn" data-preset="youtube" data-width="1280" data-height="720">
+                                <i class="fab fa-youtube"></i> YouTube<br><span class="preset-dim">1280×720</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-primary" id="generateBtn">
+                    <i class="fas fa-image"></i> Generate
+                </button>
+                <button class="btn-secondary" id="downloadBtn" disabled>
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Generated Screenshot</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <img class="modal-image" id="modalImage" alt="Generated terminal screenshot">
+            <div class="modal-actions">
+                <button class="btn-secondary" id="closeModalBtn">Close</button>
+                <button class="btn-primary" id="downloadFromModal">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationMessage">Notification</span>
+    </div>
+
+    <!-- HTML2Canvas Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script>
+        // DOM Elements
+        const codeEditor = document.getElementById('codeEditor');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const terminalPreview = document.getElementById('terminalPreview');
+        const terminalTitle = document.getElementById('terminalTitle');
+        const previewContainer = document.getElementById('previewContainer');
+        const langBadge = document.getElementById('langBadge');
+        const codeStats = document.getElementById('codeStats');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const closeModal = document.getElementById('closeModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const downloadFromModal = document.getElementById('downloadFromModal');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const tabs = document.querySelectorAll('.tab');
+        const themeSelector = document.getElementById('themeSelector');
+        const colorPicker = document.getElementById('colorPicker');
+        const themeCards = document.querySelectorAll('.theme-card');
+        const colorOptions = document.querySelectorAll('.color-option');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const terminalTitleInput = document.getElementById('terminalTitleInput');
+        const filenameInput = document.getElementById('filenameInput');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const presetSection = document.getElementById('presetSection');
+        const presetButtons = document.querySelectorAll('.preset-btn');
+        const footerLang = document.getElementById('footerLang');
+        const footerLines = document.getElementById('footerLines');
+        const footerTime = document.getElementById('footerTime');
+        const footerTheme = document.getElementById('footerTheme');
+
+        // State
+        let currentTheme = 'default';
+        let currentColor = '#4CAF50';
+        let generatedImage = null;
+        let detectedLanguage = 'auto';
+        let downloadMode = 'full';
+        let selectedPreset = null;
+
+        // Themes
+        const themes = {
+            default: {
+                name: 'Default Dark',
+                bg: '#1e1e1e',
+                text: '#d4d4d4',
+                prompt: '#4CAF50',
+                keyword: '#569cd6',
+                string: '#ce9178',
+                comment: '#6a9955',
+                number: '#b5cea8'
+            },
+            monokai: {
+                name: 'Monokai',
+                bg: '#272822',
+                text: '#f8f8f2',
+                prompt: '#a6e22e',
+                keyword: '#f92672',
+                string: '#e6db74',
+                comment: '#75715e',
+                number: '#ae81ff'
+            },
+            dracula: {
+                name: 'Dracula',
+                bg: '#282a36',
+                text: '#f8f8f2',
+                prompt: '#50fa7b',
+                keyword: '#ff79c6',
+                string: '#f1fa8c',
+                comment: '#6272a4',
+                number: '#bd93f9'
+            },
+            nord: {
+                name: 'Nord',
+                bg: '#2e3440',
+                text: '#d8dee9',
+                prompt: '#88c0d0',
+                keyword: '#81a1c1',
+                string: '#a3be8c',
+                comment: '#616e88',
+                number: '#b48ead'
+            },
+            solarized: {
+                name: 'Solarized Dark',
+                bg: '#002b36',
+                text: '#839496',
+                prompt: '#859900',
+                keyword: '#268bd2',
+                string: '#2aa198',
+                comment: '#586e75',
+                number: '#d33682'
+            },
+            github: {
+                name: 'GitHub Dark',
+                bg: '#0d1117',
+                text: '#c9d1d9',
+                prompt: '#58a6ff',
+                keyword: '#ff7b72',
+                string: '#a5d6ff',
+                comment: '#8b949e',
+                number: '#79c0ff'
+            }
+        };
+
+        // Language Detection
+        function detectLanguage(code) {
+            const patterns = {
+                javascript: [/function\s+\w+/, /const\s+\w+\s*=/, /let\s+\w+\s*=/, /=>/, /console\.log/, /require\(['"]/, /import\s+.*from/],
+                python: [/def\s+\w+\(/, /import\s+\w+/, /from\s+\w+\s+import/, /print\(/, /if\s+__name__/, /self\./],
+                java: [/public\s+class/, /private\s+/, /System\.out/, /void\s+main/, /import\s+java\./],
+                cpp: [/#include\s*[<"]/, /int\s+main/, /std::/, /cout\s*<</, /printf\(/],
+                html: [/<html/i, /<\/?(div|span|p|body|head)/i, /<!DOCTYPE/i],
+                css: [/{\s*[a-z-]+:\s*[^}]+}/, /\.\w+\s*{/, /@media/, /@keyframes/],
+                powershell: [/^PS\s+[A-Z]:\\/m, /Get-\w+/, /Set-\w+/, /\$\w+\s*=/, /-\w+\s+/],
+                bash: [/^#!/m, /sudo\s+/, /apt\s+/, /grep\s+/, /echo\s+/, /\$\w+/],
+                json: [/^\s*[\[{]/m, /"\w+":\s*["\d\[\{]/, /}\s*,?\s*$/m],
+                sql: [/SELECT\s+.*FROM/i, /INSERT\s+INTO/i, /UPDATE\s+.*SET/i, /WHERE\s+/i]
+            };
+
+            let scores = {};
+            for (let [lang, regexes] of Object.entries(patterns)) {
+                scores[lang] = regexes.filter(r => r.test(code)).length;
+            }
+
+            let maxScore = Math.max(...Object.values(scores));
+            if (maxScore === 0) return 'auto';
+
+            return Object.keys(scores).find(lang => scores[lang] === maxScore);
+        }
+
+        // Update Line Numbers
+        function updateLineNumbers() {
+            const lines = codeEditor.value.split('\n').length;
+            lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+        }
+
+        // Update Stats and Language
+        function updateStats() {
+            const code = codeEditor.value;
+            const lines = code.split('\n').length;
+            const chars = code.length;
+
+            codeStats.textContent = `${lines} lines • ${chars} chars`;
+
+            detectedLanguage = detectLanguage(code);
+            const langNames = {
+                javascript: 'JavaScript', python: 'Python', java: 'Java',
+                cpp: 'C/C++', html: 'HTML', css: 'CSS',
+                powershell: 'PowerShell', bash: 'Bash', json: 'JSON',
+                sql: 'SQL', auto: 'Auto'
+            };
+
+            const icon = detectedLanguage === 'auto' ? 'fa-magic' : 'fa-code';
+            const langName = langNames[detectedLanguage] || 'Auto';
+            langBadge.innerHTML = `<i class="fas ${icon}"></i> ${langName}`;
+
+            // Update footer info
+            footerLang.textContent = langName;
+            footerLines.textContent = `${lines} lines`;
+        }
+
+        // Syntax Highlighting (Basic)
+        function highlightCode(code) {
+            const theme = themes[currentTheme];
+            let output = '';
+
+            code.split('\n').forEach(line => {
+                // Detect prompt lines
+                if (line.trim().startsWith('PS ') || line.trim().startsWith('$ ') || line.trim().startsWith('>')) {
+                    output += `<div style="color: ${theme.prompt}">${escapeHtml(line)}</div>`;
+                }
+                // Comments
+                else if (line.trim().startsWith('//') || line.trim().startsWith('#')) {
+                    output += `<div style="color: ${theme.comment}">${escapeHtml(line)}</div>`;
+                }
+                // Regular code
+                else {
+                    let highlighted = escapeHtml(line);
+                    // Simple string highlighting
+                    highlighted = highlighted.replace(/(['"`])([^'"`]*)\1/g, `<span style="color: ${theme.string}">$&</span>`);
+                    // Numbers
+                    highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, `<span style="color: ${theme.number}">$1</span>`);
+                    output += `<div style="color: ${theme.text}">${highlighted}</div>`;
+                }
+            });
+
+            return output || `<span style="color: ${theme.prompt}">PS C:\\Users\\YourName></span> <span style="color: ${theme.comment}">// Paste your code in the editor</span>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Apply Theme
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            const terminalBody = document.querySelector('.terminal-body');
+            terminalBody.style.backgroundColor = theme.bg;
+            terminalBody.style.color = theme.text;
+
+            // Update footer theme name
+            footerTheme.textContent = theme.name;
+            updatePreview();
+        }
+
+        // Update Preview
+        function updatePreview() {
+            const code = codeEditor.value;
+            terminalPreview.innerHTML = highlightCode(code);
+
+            // Update timestamp
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            footerTime.textContent = time;
+        }
+
+        // Show Notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            notificationMessage.textContent = message;
+            notification.className = `notification ${type} show`;
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Event Listeners
+        codeEditor.addEventListener('input', () => {
+            updateLineNumbers();
+            updateStats();
+            updatePreview();
+        });
+
+        codeEditor.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = codeEditor.scrollTop;
+        });
+
+        // Tab Switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const tabName = tab.dataset.tab;
+                themeSelector.style.display = 'none';
+                colorPicker.style.display = 'none';
+                settingsPanel.style.display = 'none';
+
+                if (tabName === 'themes') {
+                    themeSelector.style.display = 'flex';
+                } else if (tabName === 'colors') {
+                    colorPicker.style.display = 'flex';
+                } else if (tabName === 'settings') {
+                    settingsPanel.style.display = 'grid';
+                }
+            });
+        });
+
+        // Theme Selection
+        themeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                themeCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentTheme = card.dataset.theme;
+                applyTheme(currentTheme);
+                showNotification(`Theme changed to ${themes[currentTheme].name}`, 'success', 2000);
+            });
+        });
+
+        // Color Selection
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                colorOptions.forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                currentColor = option.dataset.color;
+
+                // Update prompt color in current theme
+                const theme = themes[currentTheme];
+                theme.prompt = currentColor;
+                updatePreview();
+                showNotification('Prompt color updated', 'success', 2000);
+            });
+        });
+
+        // Terminal Title Input
+        terminalTitleInput.addEventListener('input', (e) => {
+            terminalTitle.textContent = e.target.value || 'Terminal';
+        });
+
+        // Download Mode Toggle
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                downloadMode = btn.dataset.mode;
+
+                // Show/hide presets
+                if (downloadMode === 'sections') {
+                    presetSection.style.display = 'block';
+                } else {
+                    presetSection.style.display = 'none';
+                    selectedPreset = null;
+                    presetButtons.forEach(p => p.classList.remove('selected'));
+                }
+                showNotification(`Download mode: ${downloadMode === 'full' ? 'Full Image' : 'Multiple Sections'}`, 'info', 2000);
+            });
+        });
+
+        // Preset Selection
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                presetButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedPreset = {
+                    name: btn.dataset.preset,
+                    width: parseInt(btn.dataset.width),
+                    height: parseInt(btn.dataset.height)
+                };
+                showNotification(`Selected: ${btn.textContent.split('\n')[0]}`, 'success', 2000);
+            });
+        });
+
+        let generatedImages = []; // Array to store multiple images if needed
+
+        // Check JSZip availability on load
+        window.addEventListener('load', () => {
+            if (!window.JSZip || typeof JSZip === 'undefined') {
+                const multiBtn = document.querySelector('button[data-mode="sections"]');
+                if (multiBtn) {
+                    multiBtn.disabled = true;
+                    multiBtn.title = "JSZip library failed to load. Multiple sections unavailable.";
+                }
+            }
+        });
+
+        // Generate Image
+        generateBtn.addEventListener('click', async () => {
+            if (!codeEditor.value.trim()) {
+                showNotification('Please enter some code first!', 'warning');
+                return;
+            }
+
+            // Validate preset selection for sections mode
+            if (downloadMode === 'sections' && !selectedPreset) {
+                showNotification('Please select a social media preset first!', 'warning');
+                return;
+            }
+
+            // UI Loading State
+            const originalBtnText = generateBtn.innerHTML;
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+            // Store original styles to restore in finally block
+            const originalOverflow = terminalPreview.style.overflow;
+            const originalMaxHeight = terminalPreview.style.maxHeight;
+            const originalWidth = previewContainer.style.width;
+            const originalPadding = previewContainer.style.padding;
+            const originalTransform = previewContainer.style.transform;
+
+            try {
+                // Prepare styles for full capture
+
+                // Expand to full height to capture everything
+                terminalPreview.style.overflow = 'visible';
+                terminalPreview.style.maxHeight = 'none';
+
+                // If sections mode, force width to preset width to ensure correct wrapping
+                if (downloadMode === 'sections' && selectedPreset) {
+                    // Adjust preview container width to match preset
+                    previewContainer.style.width = `${selectedPreset.width}px`;
+                }
+
+                // Allow layout to update
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const options = {
+                    scale: 2,
+                    backgroundColor: themes[currentTheme].bg,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    width: downloadMode === 'sections' && selectedPreset ? selectedPreset.width : undefined,
+                    windowWidth: downloadMode === 'sections' && selectedPreset ? selectedPreset.width : undefined
+                };
+
+                const canvas = await html2canvas(previewContainer, options);
+
+                // Reset generated images
+                generatedImages = [];
+
+                if (downloadMode === 'sections' && selectedPreset) {
+                    // Refined Slicing Logic
+                    const scale = 2; // html2canvas scale
+                    const chunkHeight = selectedPreset.height * scale;
+                    const totalHeight = canvas.height;
+                    const width = canvas.width;
+
+                    let y = 0;
+                    let index = 0;
+
+                    while (y < totalHeight) {
+                        // Calculate height for this chunk
+                        // Allow last chunk to be shorter (flexible height)
+                        const heightToCut = Math.min(chunkHeight, totalHeight - y);
+
+                        const chunkCanvas = document.createElement('canvas');
+                        chunkCanvas.width = width;
+                        chunkCanvas.height = heightToCut;
+                        const ctx = chunkCanvas.getContext('2d');
+
+                        // Draw specific portion
+                        ctx.drawImage(canvas, 0, y, width, heightToCut, 0, 0, width, heightToCut);
+
+                        generatedImages.push(chunkCanvas.toDataURL('image/png'));
+                        y += heightToCut;
+                        index++;
+                    }
+
+                    // Show the first image in modal as preview
+                    modalImage.src = generatedImages[0];
+                    const count = generatedImages.length;
+                    showNotification(`Generated ${count} images!`, 'success');
+
+                } else {
+                    // Single image mode
+                    const dataUrl = canvas.toDataURL('image/png');
+                    generatedImages.push(dataUrl);
+                    generatedImage = dataUrl; // Keep for backward compatibility
+                    modalImage.src = generatedImage;
+                    showNotification('Image generated successfully!', 'success');
+                }
+
+                imageModal.classList.add('active');
+
+            } catch (error) {
+                console.error('Generation error:', error);
+                showNotification('Failed to generate image. Please try again.', 'error');
+            } finally {
+                // RESTORE STYLES ALWAYS
+                terminalPreview.style.overflow = originalOverflow;
+                terminalPreview.style.maxHeight = originalMaxHeight;
+                previewContainer.style.width = originalWidth;
+                previewContainer.style.padding = originalPadding;
+                previewContainer.style.transform = originalTransform;
+
+                // Restore Button State
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = originalBtnText;
+                downloadBtn.disabled = false;
+            }
+        });
+
+        // Download Image
+        async function downloadImage() {
+            if (!generatedImages || generatedImages.length === 0) return;
+
+            let filename = filenameInput.value.trim() || 'terminal-screenshot';
+            // Remove extension if present to append properly later
+            filename = filename.replace(/\.png$/i, '');
+
+            if (generatedImages.length === 1) {
+                // Single download
+                const link = document.createElement('a');
+                link.download = `${filename}.png`;
+                link.href = generatedImages[0];
+                link.click();
+                showNotification(`Downloaded: ${filename}.png`, 'success');
+            } else {
+                // Multiple images -> ZIP
+                if (!window.JSZip) {
+                    showNotification('JSZip library not loaded!', 'error');
+                    return;
+                }
+
+                const zip = new JSZip();
+                const folder = zip.folder("screenshots");
+
+                generatedImages.forEach((imgData, i) => {
+                    // Remove data:image/png;base64, prefix
+                    const base64Data = imgData.replace(/^data:image\/(png|jpg);base64,/, "");
+                    // add 1 to index for human readable
+                    folder.file(`${filename}-${i + 1}.png`, base64Data, { base64: true });
+                });
+
+                showNotification('Creating ZIP file...', 'info');
+
+                try {
+                    const content = await zip.generateAsync({ type: "blob" });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(content);
+                    link.download = `${filename}-set.zip`;
+                    link.click();
+                    showNotification(`Downloaded: ${filename}-set.zip`, 'success');
+                } catch (err) {
+                    console.error("ZIP Generation Error:", err);
+                    showNotification('Error creating ZIP file', 'error');
+                }
+            }
+        }
+
+        downloadBtn.addEventListener('click', downloadImage);
+        downloadFromModal.addEventListener('click', () => {
+            downloadImage();
+            imageModal.classList.remove('active');
+        });
+
+        // Modal Controls
+        closeModal.addEventListener('click', () => {
+            imageModal.classList.remove('active');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            imageModal.classList.remove('active');
+        });
+
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                imageModal.classList.remove('active');
+            }
+        });
+
+        // Initialize
+        updateLineNumbers();
+        updateStats();
+        applyTheme('default');
+
+        // Check html2canvas
+        if (typeof html2canvas === 'undefined') {
+            showNotification('Warning: Image generation library failed to load. Please refresh.', 'error', 10000);
+        }
+    </script>
+</body>
+
+</html>
