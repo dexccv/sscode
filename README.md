@@ -44,11 +44,11 @@ No installation is required. This is a client-side application that runs directl
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/terminal-screenshot-generator.git
+    git clone https://github.com/dexccv/sscode.git
     ```
 2.  Navigate to the project directory:
     ```bash
-    cd terminal-screenshot-generator
+    cd sscode
     ```
 3.  Open `sscode.html` in your browser.
 
@@ -65,3 +65,4 @@ This project is open source and available under the MIT License.
 - Syntax highlighting logic inspired by common editor themes.
 - Screenshot functionality powered by [html2canvas](https://html2canvas.hertzen.com/).
 - ZIP functionality powered by [JSZip](https://stuk.github.io/jszip/).
+
